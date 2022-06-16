@@ -33,7 +33,9 @@ class TCPHandler(socketserver.BaseRequestHandler):
 
 class SentinelHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        # !type, ID, size,
+        # !F, ID, size,
+        # !C, url
+        # !S, host, port
         self.request.sendall(b"F,uid,9999999")
 
 
