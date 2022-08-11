@@ -1,0 +1,314 @@
+@h@-===- DISCLAIMER -===-
+I use Linux Mint 18 Sarah Cinnamon which is built on Ubuntu 16.04 Xenial, so everything here is tried and tested for this distro.
+As for wine, I use winehq-stable 4.0.3~xenial as I have some compatibility issues with wine 5.0+, issues unrelated to these games but everything should still work fine on the latest release of wine.
+
+If you’re using Archlinux, there’s a bit more to setup for that distro, which an anon wrote a small guide for here: https://pastebin.com/1uEHUnP0 
+If you're a Windows user, there's not much here for you, but give the FAQ & TROUBLESHOOTING section a read, especially at the end
+
+
+@h@-===- CHANGELOG -===-
+-Rewrote the guide and greatly cleaned things up
+-Added section for RPG Maker MV/MZ' and added info on other games (flash, unity, etc) at the end of 'FAQ & TROUBLESHOOTING'
+
+And that's it. For RPGMaker games you'll also have to download RTPs and the appropriate fonts, which I've compiled here to save time from having to download individually, you can find it here: https://mega.nz/#F!IZEiAYoI!ymRRyhWQKc0L6dC7ASsfog , download "RTPs/Fonts/Decrypters.7z". See the FAQ & TROUBLESHOOTING section if you want to download them from their sites instead. Also included are extractor tools for RPGMaker and WOLF RPG. Make sure you check out the SCREENSHOTS album here: https://imgur.com/a/ONGRO , if you ever need a visual reference.
+
+
+@h@-===- INDEX -===-
+	BEFORE YOU START
+	WINE
+	RPG Maker
+	RPG Maker Run Time Packages (RTPs)
+	PACKAGES
+	RPG MAKER MV/MZ
+	WOLF RPG
+	FAQ & TROUBLESHOOTING
+	HOOKING AND MACHINE TRANSLATIONS (MTL)
+	MISC LINKS
+	EXTRA NOTES
+
+
+@h@-===- BEFORE YOU START -===-
+This is a general guide oriented towards newcomers in GNU/Linux to getting RPGMaker and Wolf RPG games (and some others) running under Wine, without resorting to unnecessary workarounds like PlayOnLinux or EasyRPG (only allows for playing RPGM 2000/2003 games). Even if you're an experienced user, I hope this guide manages to clear up and answer some details. Simple, efficient, and most importantly prioritizes on filesize since only the bare necessary packages are installed. The only things you'll need are:
+
+-Very basic knowledge (how2root, how2navigate filesystems, what distro do I have, etc)
+-Terminal
+-Package Manager (optional, but we'll be installing them through terminal)
+-Internet Connection
+
+Anyways, before we start there are a couple of things to do first:
+In terminal, run only the following under root (sudo -i) to generate Japanese locale:
+
+locale-gen ja_JP.UTF-8
+
+Now we can run programs under wine in Japanese locale, which you can do with 'LANG=ja_JP.UTF-8 wine /path/to/GameFolder/Game.exe' in terminal, do so just to be safe.
+This also gives you a log of what the game's accessing which comes in handy if your game crashes and needs troubleshooting.
+
+Fonts will show up squiggly and fucked up, this is due to GNU/Linux using RGBA Antialiasing on Monofonts by default. To fix this, if you're on Ubuntu, install 'gnome-tweak-tool', change Font Antialiasing to either Grayscale or None (NOT RGBA!). If you're on Linux Mint like me, then you already have this installed by default, Menu>Preferences>Fonts brings up the panel, apply the same change.
+
+Also I recommend using "unar" to unpack archives, as many times the files contain Japanese characters, and the default archive manager either fails to extract or gives mojibake. Works for .zip, .rar, 7z and many more, usually doesn't give mojibake. Running it is simple too: "unar path/to/[archivename].rar" and it'll extract nicely.
+
+NOTE: If you're using unar to unpack a .rar and it DOES give mojibake, try installing "unrar" (yes, with two 'r's) and extracting using that instead.
+This happens because the archive is packed using RAR version 5 format, and you're probably using unar v.1.9 or below, which does not support said format. For some reason the unar dev doesn't include updates for v.1.10+ (which supports RAR v.5) for older distros, you can check which version you have here: https://pkgs.org/download/unar
+
+If you get an error to unpack a .7z file, try using p7zip-full.
+
+
+@h@-===- WINE -===-
+Wine allows you to run windows programs without needing a VM, by translating the inputs into something that can be read by Linux. I use wine 4.03 due to compatibility issues with later versions but those are unrelated to these games, you should run the latest version.
+
+Look up the instructions for your distro here: https://www.winehq.org/download , and install according to which version of said distro you're running. 
+NOTE: Enabling 32 bit architecture isn't necessary if you’re on 64-bit system, they'll run fine. In fact, when I tried it, it actually broke the install so I would not recommend or maybe I'm just retarded.
+
+As an example, since my distro is built on Ubuntu 16.04 Xenial, if I were to install the latest version of wine this is what I'd run in terminal, following the instructions on the previous link:
+
+wget -nc https://dl.winehq.org/wine-builds/winehq.key
+sudo apt-key add winehq.key
+sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' && sudo apt update
+sudo apt install --install-recommends winehq-stable
+
+If, for whatever reason you would like to install a specific, older version of wine like me, you can look up all the releases for your distro here https://dl.winehq.org/wine-builds/ . In my case, I use the last version of wine-stable before the release of 5.0, which would be 4.03 and I'd follow the same steps mentioned above except the last one, where I'd run this instead:
+
+sudo apt install winehq-stable=4.0.3~xenial wine-stable=4.0.3~xenial wine-stable-amd64=4.0.3~xenial wine-stable-i386=4.0.3~xenial
+
+Wait until Wine finishes downloading and installing. So now what, is it over? Not completely. Run ‘winecfg’ (just that) in terminal to bring up wine's config panel, when you run wine for the first time it'll ask you to install mono and gecko packages, wine-mono is needed to run .NET applications while wine-gecko isn't needed, that's wine's own version of an internet browser. If you want to configure wine this is where you do it, we'll use this later for MV games.
+
+@h@-===- RPG Maker -===-
+And that's it. For RPGMaker games you'll also have to download RTPs and the appropriate fonts, which I've compiled here to save time from having to download individually, you can find it here: https://mega.nz/#F!IZEiAYoI!ymRRyhWQKc0L6dC7ASsfog , download "RTPs/Fonts/Decrypters.7z". See the MISC LINKS section if you want to download them from their sites instead. Also included are extractor tools for RPGMaker and WOLF RPG. Make sure you check out the SCREENSHOTS album here: https://imgur.com/a/ONGRO , if you ever need a visual reference.
+
+Before continuing though, open the "rm2k_fonts" folder, and copypaste these 3 files (msgothi0.ttc, msgothic.ttc,  msmincho.ttc) into .wine/drive_c/windows/Fonts (Enable hidden files to find .wine in Home)
+IMPORTANT: DO NOT ACTUALLY INSTALL THE .ttc FILES! It will mess up the in-game fonts really bad, just leave them there. The games DO actually check for it and use it in case you're wondering (see screenshots album for examples), just DONT install them. As for the .FON files, they can't even be read by Linux, see FAQ & TROUBLESHOOTING, delete them, they’re for Windows users.
+
+Now we can move on to the RTPs:
+
+
+@h@-===- RPG Maker Run Time Packages (RTPs) -===-
+Each version of RPGM introduces it's own set of common assets for use on it's engine. This means generic NPC sprites, character portraits, maps, music and sound effects files, visual effects for skills, etc. These by default are packaged with their respective version of RPG Maker Engine, but are also packaged separately as "Run Time Packages". What this means, is that games don't need to include these assets since you already have them on your PC. If they include any, it's usually custom assets, like tilesets, audio tracks, etc. That's why there's so many <300 MB games, as they can avoid this bloat.
+
+If you downloaded the "RTPs/Fonts/Decrypters.7z" file from the MEGA link, extract and you'll see a bunch of folders and files. Do NOT touch the "RPGM XP RTPS (ARCHIVAL)" folder unless you know what you're doing. Install 2000rtp.exe and 2003rtp.exe with Japanese locale like so:
+
+LANG=ja_JP.UTF-8 wine path/to/2000rtp.exe
+
+The rest of the RTPs can be installed normally, no need for locale. 
+"RGSS-RTP-Standard-pt-br.exe" should be the ONLY RTP you install for XP (see why in FAQ & TROUBLESHOOTING), don't mind the portuguese, that's only the installer. The "RPGVX_RTP" folder is for VX and "RTP100" folder is for VX Ace. RPGM MV/MZ don't have any RTPs.
+
+Anyways, now you have all of them installed and you're nearly done, just one last thing so head on to the next section:
+
+
+@h@-===- PACKAGES -===-
+If you try to launch any game right now, it'll most likely crash. Install ffmpeg first, as 'gstreamer1.0-libav:i386' has some ffmpeg dependencies.
+
+Now you can install these from command line with 'sudo apt-get install' or you can search for them in your package manager. "i386" means 32-bit version, but don’t worry if your OS is 64-bit, just install them.
+
+libgstreamer1.0-0-dbg
+gstreamer1.0-plugins-good:i386 
+gstreamer1.0-libav:i386
+gstreamer1.0-plugins-ugly:i386
+
+Now, finally, you can enjoy RPG Maker games, and shouldn't run into any problems. Unless it’s a RPG MV game, see below.
+
+
+-===- RPG MAKER MV -===-
+Hoo boy, this one's a doozy, where do I even start. First things first, see if you can run Game.exe without doing anything else. If it runs, GREAT! A previous version of wine had MV games running fine out of the box but that's not the case anymore by 4.03. But don't worry, it is possible to get them to run under wine, and failing that, some other ways too:
+
+RUNNING UNDER WINE:
+First, install winetricks:
+
+sudo apt-get install winetricks
+
+Now, install d3dcompiler and corefonts, run just the following in terminal, no sudo needed:
+
+winetricks d3dcompiler_43 corefonts
+
+Then in the game's directory, remove or delete libGLESv2.dll. After that's done, try running the game. If it works, GREAT! You've done it. But some MV games will have audio while others will not, to fix that and ensure you'll always have audio, open winecfg, go to the 'Libraries' tab, click on where it says 'New override for library' and type the following: 'winepulse.drv', then click 'Add'. It'll show up under 'Existing overrides' under d3d_compiler_43. Select 'winepulse.drv', Edit, then DISABLE, and OK. 
+Now you can play your game just by launching Game.exe, you'll have audio and it'll save in the game's directory. All's good...if not, then try the following:
+
+RUNNING UNDER LOCAL HOST
+Install python3 if you don't have it, then in the game's directory, open the 'www' folder in terminal and run the following:
+
+python3 -m http.server
+
+It'll say 'Serving HTTP on 0.0.0.0 port 8000', open your browser, go to '0.0.0.0:8000' address and et voila, it runs! If you want to play another game, then you'll have to do the same but with the 'www' folder of another game. If you visit the local host and it's still the previous game, try refreshing a couple of times. 
+There's audio by default and you can save...but it's not in the game's directory, see below. But if this fails also then as a method of last resort, you can always try to run it through your browser.
+
+RUNNING THROUGH YOUR BROWSER (FIREFOX)
+Go to about:config and search for 'security.fileuri.strict_origin_policy', doubleclick to set to 'FALSE'. Now go into the 'www' folder and open 'index.html' with your browser. That's it, if it runs then good, if not, then I truly have nothing else, assuming it's not due to filename errors (see below for more info). If it doesn't work, consider changing 'security.fileuri.strict_origin_policy' back to 'TRUE' til the next time you want to try an MV game using this method, because that's a safety measure that prevents local files from trying to capture information from other sites via AJAX.
+But if you can run it then great, just like in the previous method you can save, but it's not in the game's directory, so where is it?
+
+Well, if you press F12, go to the 'Storage' tab and click on the 'Local Storage' section on the left, then the entry of your page, you will see some more entries here: 'RPG Global', 'RPG Config' and maybe ''RPG File1' if you saved, etc. THERE'S your save files. It's stored IN the browser, but NOT in the browser's cache. If you've been playing through Local Host, you'll notice all the saves for all the MV games you've played through this method shows up here (as well as on the save screen), that's because it's tied to the url.
+
+Notice that you can see the values for each entry, this means that you can download someone's save for the same game, open it in Text Editor and copypaste the value, that's how you import a save. You can create entries with the little 'plus' symbol on the right. Crazy stuff, huh? But what if this isn't enough for you and you want the exact physical file where these values are stored in? 
+
+Then in the URL bar go to about:profiles, and in the row that says 'root directory' of the profile in use, click 'Open Directory'. There you will find 'webappsstore.sqlite' which is the database file where these entries and values are stored in. I guess if you wanted to 'back up' your save files this is it.
+
+KNOWN ISSUE: MV games are notorious for giving errors and crashing due to not finding files (mostly the former), this is due to unix filenames being case sensitive while Windows is not. It means if the game asks for, say, a font called 'CALIPR.TTF' your system will look for it and report 404 file not found despite 'CALIPR.ttf' being in the directory. It could be anything, from font files to script files, to audio/image files, etc... but UNLIKE previous versions of RPG Maker, the engine actually tells you what the error is, what it's looking for and where it's looking for. All previous versions of RPG Maker simply fucking crashed upon not finding a file, you'd have to look at your terminal log to see what went wrong. Most importantly, after you've renamed the file correctly, you can simply press 'Retry' and it'll try to look for the file again, load it and continue on. So get used to fixing these errors from lazy devs who don't bother being case sensitive, cause you'll be doing that a lot.
+For batch fixing filenames (i.e. % to /), see FAQ & TROUBLESHOOTING below
+
+
+@h@-===- WOLF RPG -===-
+Nothing fancy needed for these games, just install Wine and run Game.exe, hurrah! Remember to run in Japanese locale.
+ 
+KNOWN ISSUE: There's a bug where closing the game doesn’t actually terminate the process. After playing make sure to check System Monitor! See FAQ & TROUBLESHOOTING for more on this. This got fixed in wine 3.0 but it's back again, check if it's still there on the latest version of wine.
+
+KNOWN ISSUE (maybe wine 4.03 specific?): While playing certain Wolf RPG games, your disk drive space gets eaten up fast by a bunch of temp files created in /home/*username*/.wine/drive_c/users/*username*/Temp . If this is the case with your game, you'll just have to wipe them all either when they get too much or after playing. Deleting them mid-game doesn't affect the performance of the game at all.
+
+
+@h@-===- FAQ & TROUBLESHOOTING -===-
+
+>"How do I fullscreen/window in [RPGM GAME] or [WOLF RPG GAME]? What controls are there?"
+-RPG Maker:
+	-ALT+Enter toggles windowed/fullscreen. F1 brings up options and controls layout, F2 brings up FPS counter, F12 resets to title screen
+-For games in MV it’s a bit different:
+	-F2 brings up FPS counter, F4 toggles windowed/fullscreen, F5 resets to title screen 
+
+-Wolf RPG:
+	-ALT+Enter or F4 toggles windowed/fullscreen, F8 brings up FPS counter, F5 toggles between High/Medium/Low performance, F12 resets to title screen
+	-Options and controls layout can be found in "Config.exe" in Game folder
+
+>"Help! My game crashed/doesn't launch!"
+-RPG Maker:
+	-Do you have the correct RTP?
+	-Are you running under Japanese locale?
+	-Have you tried running wine in XP compatibility mode? (open winecfg)
+	-Did you install ALL the packages I specified and they're the CORRECT version (i386 if specified)?
+	-Check the terminal log, if it says something about "gstreamer is missing a plugin", then your problem probably can be solved by installing a codec package. It can be found by searching "gstreamer" in the package manager. Good luck trying to figure out which one is needed, or try looking in ubuntu-restricted-extras for more codecs
+	-Did you check the filenames for mojibake? (check the terminal log) Re-extract, rename, convert or redownload
+	-If it's still not fixed then I have no idea
+
+-Wolf RPG:
+	-Did you check System Monitor for any duplicate Game.exe sessions?
+	-Did you check the filenames for mojibake?
+	-Are you running under Japanese locale?
+	-Did you try changing to software mode in "Config.exe"?
+	-If it still hasn’t been fixed, then I have no idea dude.
+
+>”After playing [WOLF RPG GAME] or during, my performance drops!”
+AS I mentioned before, there's a bug where even if you exit a Wolf RPG game, the process still runs in the background. An instance of Game.exe is run everytime you launch the game, even if it’s the same one, and remains even when you exit. Simply check System Monitor and kill every instance properly after playing. This got fixed in wine 3.0 but now it's back, I have no idea if it's been fixed again in 5.0+
+
+>"While/After playing [WOLF RPG GAME], my disk space gets eaten up horribly!"
+This seems to be a new issue in wine 4.0+, while playing certain Wolf RPG games, your disk drive space gets eaten up fast by a bunch of temp files created in /home/*username*/.wine/drive_c/users/*username*/Temp . If this is the case with your game, you'll just have to wipe them all either when they get too much or after playing. Deleting them mid-game doesn't affect the performance of the game at all.
+
+>"I'm running [WOLF RPG GAME] and the text is all terribly messed up/I get a green banner with some japanese written on it/mojibake everywhere/messed up UI!"
+Don't worry, you SHOULD find "Config.exe" in the game folder, run that and a config panel should pop up. Switch to software mode and relaunch. If the config panel is in Japanese, see the screenshot album for a translated version.
+
+As for the green banner thing, that's an error message saying the Engine cannot find a [File], but unlike RPG Maker (save for MV/MZ), it doesn't crash immediately. You either don't have it or most likely you extracted wrong and it has garbled filenames, so try extracting properly.
+
+>"I'm running [RPGM GAME] and there's no text displaying! Everything else works fine, I can select options but the UI are all blank!"
+So far this only seems to happen in XP games, I haven't heard of it happening in games on any other RPGM engine. Apparently this happens due to fonts having two names depending on the locale, but the engine only requests said font by it's Japanese name, so even if you have it installed, it won't be detected. 
+
+To copypaste what an anon wrote:
+
+"No, TTF/TTC font files sometimes (more often with Japanese fonts unfortunately) have their own locale-specific names inside. The game asks Windows to find the font by its Japanese name (e.g.しねきゃぷしょん) while that very installed font is registered in non-Japanese locale under non-Japanese name (e.g.cinecaption). Changing DLLs won't help with that, so that's the same symptom of another problem. It can be worked around by opening the game in the Maker and replacing font name in the scripts with western one, but it will break the game in Japanese locale."
+
+Sounds like if you can manage to figure out what font the game is requesting, you can simply add it or make a copy of the correct one and rename it so it'll get used by the game, but that's the hard part. On the other hand, others report that changing the dll works, try it out if nothing else:
+
+Switch the RGSS library .dll file (XP's RGSS files should look something like this: RGSS102E.dll, RGSS103J.dll, RGSS104E.dll, etc) in the game folder to any other XP RGSS library file you have, then edit the Game.ini file to use the new .dll and try launching again, rinse repeat til it works. 
+If you don't have any or tried them all and it still doesn't work, then you're shit outta luck.
+
+>"How do you batch rename files?"
+
+
+>"Help, my downloaded archive is already mojibake'd!"
+
+
+>"How do I extract assets from [RPG Maker Game] and [Wolf RPG Game]? And how do I apply a transation patch for both of them?"
+Both tools are included in the MEGA and RTPs/Fonts/Decrypters.7z at https://mega.nz/#F!IZEiAYoI!ymRRyhWQKc0L6dC7ASsfog . Note: arc_conv is a tad outdated, and won’t work with games made in the newest version of Wolf RPG. Use DXExtract instead, as this one is continuously being updated: http://himeworks.com/tools/dxextract/
+
+RPG Maker:
+	-Run "RPG Maker All Decrypter.exe"
+	-File -> Open File -> Navigate to folder containing game and open the Game.rgss 
+	-Tools -> Extract All 
+	-There should now be a a new folder where the extraction tool is located named "extract" 
+	-Copy everything in "extract" and paste into game directory 
+	-Copy contents of patch/translation folder into game directory 
+	-Remove or rename game.rgss in the game directory <-- If your game STILL remains in Japanese double check and make SURE you did this step *I recommend renaming so you can always fall back on the data contained in the file* 
+	-Play game
+
+Wolf RPG:
+	-Run "arc_conv.exe"
+	-Select the game's data.wolf file. 
+	-Rename the new "data.wolf" folder to just "data"
+	-Copy-paste the patch/translation's files into the data folder
+	-Remove or rename data.wolf in the game directory
+	-Play game
+
+>"Can I make an executable shortcut that launches the game in Japanese locale without having to enter the command everytime?"
+Sure, with a bash shortcut. Personally, I don't use them.
+
+>"I have another version of RTP for RPG Maker XP, which do I use?"
+I don't know what happened during RPGM XP's development, but there's like 3 or 4 different versions of the "RTP" for it floating around, all of them installing different folders and probably different assets, haven't checked that. 
+
+What happens though, is that some XP games will throw you an error about "RGSS-RTP", which means they're looking for the folder. Turns out, to install that you need to run yet another version of RTP for RPGM XP, so I decided to experiment with JUST installing that one to see if other XP games (that don't throw the error) can run with it. Til date I haven't had any other errors yet, except for the "No text" problem, but that's entirely unrelated. That's why in this guide I strongly recommend using it as XP's sole RTP instead of installing anything else. I've also included the other XP RTPs in the download too, just in case. (xp_rtp103.exe and xp_rtp104e.exe)
+
+>"Tell me more about the RTPs."
+They're installed in the following locations:
+
+RPGM 2000:   C:\Program Files (x86)\ASCII\RPG2000
+RPGM 2003:   C:\Program Files (x86)\Enterbrain\RPG2003
+RPGM XP:     C:\Program Files (x86)\Enterbrain\RGSS-RTP 
+RPGM VX:     C:\Program Files (x86)\Common Files\Enterbrain\RGSS2
+RPGM VX Ace: C:\Program Files (x86)\Common Files\Enterbrain\RGSS3
+
+There is NO Run Time Package for RPG Maker MV, as the engine was (rather poorly) designed for compatibility with smartphones (Android and iOS) by using Javascript plugins and nwjs, the games come with all the assets they'll need.
+
+-"The MEGA link is down! Where do I get the files?"
+You can find the RTPs here: https://tkool.jp/support/download/index or https://www.rpgmakerweb.com/download/additional/run-time-packages , however do NOT install the XP RTP from there, google "RGSS-RTP-Standard-pt-br.exe" instead. 
+
+For the fonts, get it here: http://www.indiedb.com/games/the-sewers/downloads/rpg-maker-2000-font-patch . Despite being a .exe, what it actually does it just unpack the same files in the /Fonts folder, and it's actually where I got them from. Might have to google for msgothic.ttc though.
+
+For the decrypters, google "RGSS decrypter" and "arc_conv.exe" or “DXExtract”
+
+-”What are the FON files for?”
+The .fon font files don't actually do anything, as unfortunately they can’t be read by Linux. They're there because supposedly it fixes some font issues for Windows users, and they don't need to be installed either, just drag & drop.
+
+>"How do I view online flash files in my browser/offline flash files using my browser? It keeps trying to download the file instead of opening it!"
+That depends on your browser, Firefox uses the flash plugin which you'll need to install, it's just called 'adobe-flashplugin', Chrome/Chromium uses Pepper Flash which I think comes installed already. This works for Windows as well, just follow the instructions:
+-Firefox: In about:config, search for 'plugins.http_https_only' and set to false.
+-Chrome/Chromium: In chrome://settings/content/flash, check your settings I guess. I don't use Chrome so I can't verify.
+
+Now, for Linux, to open local swf files with your browser you'll need a MIME rule. Create a new text document and paste the following 'application/x-shockwave-flash       swf swfl', save as '.mime.types' (DOT mime DOT types), if it disappears then enable hidden files to see it. Then cut/paste the file into your Home directory, now when you open a swf file using browser, it'll show up in a new tab. It'll ask for your permission to run first though, but that's just two clicks. Note this is for Firefox, I haven't tested it with Chrome/Chromium.
+
+IMPORTANT NOTICE: Flash is getting phased out of browsers at the end of 2020. Their APIs will no longer allow access to the flash plugin, Firefox is scheduled to drop it at the end of 2020. Google's Pepper Plugin API (PPAPI) is being dropped June 2021 and with that, all the others that are Chromium-based like Edge, Opera, etc.
+But for Windows users, that might not matter anyways since Microsoft is forcefully removing Flash from all browsers via 'Windows Update' at the end of 2020 with no way to opt out.
+
+If you want to open flash files without using any browser plugins, there are a few offline programs that will do that, the most notable being Adobe's own 'Flash Projector' which you can find here https://www.adobe.com/support/flashplayer/debug_downloads.html and works with wine, or others like 'SWF File Player' and 'SWF Player'
+
+>"Where are my flash game saves located at?"
+For Windows: C:\Users\*Username*\AppData\Roaming\Macromedia\Flash Player\#SharedObjects\*Random letters and numbers*\localhost
+For Linux: /home/*username*/.macromedia/Flash_Player/#SharedObjects/*Random letters and numbers*/#localWithNet/*Here you will find a copy of the directory of where your swf game is located at, so this can get quite long lol but like the previous folder's name says, '#localWithNet' means local files that you opened with a browser*
+Note: If you're playing a game hosted on a website, then after /#sharedObjects/*Random letters and numbers/ you will find a folder named after the site you played it on i.e. i.4cdn.org
+
+>"What about Unity games?"
+Yup, they run, under japanese locale and everything. Just one slight problem, taking the game out of focus (minimizing, alt+tab to another window, etc) makes it freeze and there's no way to unfreeze it, gotta kill the process. Save files are located in /home/*username*/.wine/drive_c/users/*username*/AppData/LocalLow , for Windows users it's the same, just ignore everything up til drive_c
+
+
+
+@h@-===- HOOKING AND MACHINE TRANSLATIONS (MTL) -===-
+
+I don’t know much about this subject, but here’s what I know: VNR isn’t compatible with GNU/Linux so give it up. ITHVNR and Translator Aggregator+TA Helper, however, works, I’ve tried it myself. And that’s all I know. Maybe you can check various VN wikis and communities like /vng/, /hgg/ or even reddit r/visualnovels for help. Yeah, I know, >>>/reddit/ but hey, they have a wiki on how to setup ITHVNR, custom libraries and all that stuff, plus they’re active. 
+
+Check ulmf/f95 forums or /hgg2d/ for hooking codes.
+
+
+@h@-===- MISC LINKS -===-
+All the links in this guide can also be found in this section:
+
+https://mega.nz/#F!IZEiAYoI!ymRRyhWQKc0L6dC7ASsfog A public folder I made that contains all the RTPs, some tools and game saves/guides rehosted all in one handy place
+https://imgur.com/a/ONGRO Album of screenshots, if you have doubts on how something should look, consult the album!
+http://himeworks.com/tools/dxextract/ DXExtract’s site, with download to the latest version and instructions
+https://pkgs.org/download/unar Packages for unar
+https://www.winehq.org/download Instructions for installing wine-stable
+https://tkool.jp/support/download/index Japanese (THIS IS IMPORTANT) version of RTPs for RPGM 2000 and 2003, but actually contains RTPs for all versions too
+https://www.rpgmakerweb.com/download/additional/run-time-packages RTPs for RPGM XP (NOT the one I suggest using), VX and VX Ace
+http://www.indiedb.com/games/the-sewers/downloads/rpg-maker-2000-font-patch Contains fonts that RPGM 2000/2003 use
+
+For games make sure to visit:
+ 
+https://vgperson.com/games/
+https://rpgmaker.net/
+/hgg2d/ and /hgg/ for all your fapping needs, /rpgmg/ if you're interested in making your own (RIP /rpgmg/)
+https://f95zone.to/forums/games.2/
+https://ulmf.org/forums/hentai-games.9/
+https://www.dlsite.com/maniax/
+
+
+@h@-===- EXTRA NOTES -===-

@@ -5,6 +5,8 @@ db.*
 client.err*
 **/static/*
 
+
+*.json
 REPORT.*
 mark.py
 static*
