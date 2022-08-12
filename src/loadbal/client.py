@@ -1,4 +1,12 @@
-"""Clients who insteract and handle data from both TCP and HTTP servers"""
+"""
+Clients who interact and handle data from both TCP and HTTP servers
+
+
+1. The client listens to the sentinel for a message
+2. When the client reads the message it decides what to do depending on the command (first argument of the message)
+3. It either yields an error, a chunk of data, or None if the command was merely administrative (adding/removing consumers or switching the server after it failed)
+
+"""
 from collections import deque
 from typing import Tuple, List
 import socket
@@ -51,18 +59,21 @@ class Client(requests.Session):
         return data
 
     def _drop_consumer(self, consumer: str):
-        """A consumer is down"""
+        """A consumer is down, remove it"""
         self.consumers.remove(consumer)
 
     def _add_consumer(self, consumer: str):
         self.consumers.append(consumer)
 
     def _switch_server(self, replacement: tuple):
+        """Close the old connection to the server and listen to another one"""
         self.sock.close()
         self.sock.connect(replacement)
 
     def receive_message(self):
-        """Waits for the signal from the sentinel and reads a message"""
+        """
+        Waits for the signal from the sentinel and reads a message, forwarding it to the execute_command method
+        """
         raw_msg = ""
         while not raw_msg:
             chunk = self.sentinel.recv(1)
@@ -76,6 +87,7 @@ class Client(requests.Session):
         return self.execute_cmd(command, fields)
 
     def execute_cmd(self, command: str, fields: list):
+        """Parse arguments and execute actions"""
         if command == "F":
             size = fields.pop()
             uid = fields.pop()
@@ -104,7 +116,7 @@ class Client(requests.Session):
             yield  {"errors": "Bad command {command}"}
 
     def send_message(self):
-        """Send messages from queue"""
+        """Send data from the TCP server to an HTTP server via JSON"""
         for msg in self.receive_message():
             if "errors" not in msg:
                 for consumer in self.consumers:
