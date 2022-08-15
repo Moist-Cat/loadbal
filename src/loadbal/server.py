@@ -36,7 +36,7 @@ class SentinelHandler(socketserver.BaseRequestHandler):
         # !F, ID, size,
         # !C, url
         # !S, host, port
-        self.request.sendall(b"F,uid,9999999")
+        self.request.sendall(b"F,uid,29000\n")
 
 
 class HTTPHandler(BaseHTTPRequestHandler):

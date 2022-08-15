@@ -8,21 +8,83 @@ Clients who interact and handle data from both TCP and HTTP servers
 
 """
 from collections import deque
-from typing import Tuple, List
+from functools import wraps
+from io import BytesIO
 import socket
+import time
+from threading import Thread
+from typing import Tuple, List
 
 import requests
 
 from loadbal.__init__ import __version__ as version
+from loadbal.log import logged
+from loadbal import settings
 
 PART_SIZE = 18  # in bytes
 ENC = "latin1"
 
 
+def check_errors(request):
+    """
+    VERSION: 1.0.1
+    Properly handles HTTP and other comms related errors.
+    """
+
+    @wraps(request)
+    def inner_func(cls, method, url, **kwargs):
+        request_success = False
+        retries = 0
+        while not request_success:
+            try:
+                response = request(cls, method, url, **kwargs)
+                response.raise_for_status()
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.SSLError,
+            ) as exc:
+                cls.logger_error.exception(exc)
+
+                cls.logger.info("Network unstable. Retrying...")
+                cls.logger_error.error(
+                    "Server URL: %s, failed while trying to connect.", url
+                )
+                if retries > settings.RETRIES:
+                    raise exc
+
+            except requests.exceptions.HTTPError as exc:
+                try:
+                    payload = kwargs["data"]
+                except KeyError:
+                    payload = "none"
+                error_message = f"""
+                    Server URL: {response.url},
+                    failed with status code ({response.status_code}).
+                    Raw response: {response.content[:50]}
+                    Request payload: {payload}
+                """
+                cls.logger.error(error_message)
+                with open(settings.BASE_DIR / "logs/debug.html", "w+b") as file:
+                    file.write(response.content)
+                raise exc
+            else:
+                request_success = True
+            time.sleep(1)
+            retries += 1
+        return response
+
+    return inner_func
+
+
+@logged
 class Client(requests.Session):
     """
     HTTP/TCP client.
     """
+
+    @check_errors
+    def request(self, *args, **kwargs):
+        return super().request(*args, **kwargs)
 
     def __init__(
         self,
@@ -74,15 +136,19 @@ class Client(requests.Session):
         """
         Waits for the signal from the sentinel and reads a message, forwarding it to the execute_command method
         """
-        raw_msg = ""
-        while not raw_msg:
+        raw_msg = BytesIO()
+        while True:
             chunk = self.sentinel.recv(1)
             if chunk == b"\n":
                 break
+            raw_msg.write(chunk)
 
-        msg = raw_msg.decode(ENC)
+        raw_msg.seek(0)
+        msg = raw_msg.read().decode(ENC)
         fields = msg.split(",")
         command = fields.pop(0)
+
+        assert command, "No command"
 
         return self.execute_cmd(command, fields)
 
@@ -113,17 +179,41 @@ class Client(requests.Session):
         elif command == "S":
             self._switch_server(fields)
         else:
-            yield  {"errors": "Bad command {command}"}
+            yield  {"errors": f"Bad command {command}"}
+
+
+    def _send_message(self, msg):
+        bad_consumers = [] 
+        for consumer in self.consumers:
+            try:
+                res = self.post(consumer, json=msg)
+            except (
+                requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.SSLError,
+            ) as exc:
+                if len(bad_consumers) == len(self.consumers) - 1:
+                    self.logger.critical("!!! NO CONSUMERS AVAILABLE. !!!")
+                    return False
+                # bad consumer
+                self.logger.warning(f"Removing bad consumer %s", consumer)
+                bad_consumers.append(consumer)
+                continue
+            self.logger.info("%d %s %s", res.status_code, res.headers, msg)
+        for consumer in bad_consumers:
+            self.consumers.remove(consumer)
+        return True
+
 
     def send_message(self):
         """Send data from the TCP server to an HTTP server via JSON"""
         for msg in self.receive_message():
             if "errors" not in msg:
-                for consumer in self.consumers:
-                    res = self.post(consumer, json=msg)
-                    print(res.status_code, res.headers, msg)
+                sent = False
+                while not sent:
+                    sent = self._send_message(msg)
             else:
-                print(msg["erorrs"])
+                self.logger.error(msg["errors"])
 
 
 if __name__ == "__main__":
